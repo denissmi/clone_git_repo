@@ -27,7 +27,10 @@ def main():
     if args.local_path.exists():
         repo = git.Repo(args.local_path)
     else:
-        repo = git.Repo.clone_from(args.git_url, args.local_path, branch=args.branch)
+        repo = git.Repo.clone_from(args.git_url, args.local_path)
+
+    repo.head.reference = repo.create_head(args.branch)
+    repo.head.reset(index=True, working_tree=True)
 
 
 if __name__ == '__main__':

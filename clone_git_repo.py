@@ -1,5 +1,5 @@
 """
-The script clones git remote repo to the local path.
+The script clones git remote repo to the local path or pulls the last changes if the repo exists.
 
 Example of the usage:
 python clone_git_repo.py --git-url https://github.com/denissmi/clone_git_repo --branch master
@@ -8,6 +8,22 @@ python clone_git_repo.py --git-url https://github.com/denissmi/clone_git_repo --
 import argparse
 import git
 import pathlib
+
+
+def local_repo(local_path: pathlib.Path, git_url: str = None):
+    """
+    Clones remote git repo if this one does not exists and git url assigned, then returns the local repo.
+
+    :param local_path: local path to the repo
+    :param git_url: git repo URL address
+    :return: git.Repo object
+    """
+    if local_path.exists():
+        return git.Repo(local_path)
+    elif git_url:
+        return git.Repo.clone_from(git_url, local_path)
+
+    return None
 
 
 def parse_arguments():
@@ -22,15 +38,24 @@ def parse_arguments():
 
 
 def main():
-    """The mian function."""
+    """The main function."""
     args = parse_arguments()
-    if args.local_path.exists():
-        repo = git.Repo(args.local_path)
-    else:
-        repo = git.Repo.clone_from(args.git_url, args.local_path)
+    repo = local_repo(args.local_path, git_url=args.git_url)
+    if not repo:
+        # There is no local repo
+        return None
 
-    repo.head.reference = repo.create_head(args.branch)
+    if args.branch not in repo.heads:
+        # There is no required branch
+        return None
+
+    repo.heads[args.branch].checkout()
     repo.head.reset(index=True, working_tree=True)
+
+    origin = repo.remote()
+    origin.pull()
+
+    return None
 
 
 if __name__ == '__main__':

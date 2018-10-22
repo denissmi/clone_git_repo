@@ -1,5 +1,5 @@
 # Clone Git Repo
-Clones git repo
+Clones or pulls git repo
 
 ##### Setting up environment:
 1. Install python
